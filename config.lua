@@ -2,6 +2,7 @@ Config = Config or {}
 
 Config.debug = false -- Set to true to enable target zone debug
 Config.boxZone = false -- Set to true to use box zone instead of target entity, might set this to each prop in the future
+Config.menu = "qb-menu" -- Menu to use for crafting  /  qb-menu or ox
 
 Config.craftObjects = {
     {   

@@ -53,37 +53,68 @@ end
 function GenerateCraftMenu(craftType)
     print('Generating menu for craft type: ' .. craftType)
     local menu = {}
-
-    if Config.craftMenu[craftType] then
-        local category = Config.craftMenu[craftType]
-        table.insert(menu, {
-            header = category.label,
-            isMenuHeader = true
-        })
-
-        for itemName, item in pairs(category.items) do
-
-            local ingredientsText = "Ingredients: <br>"
-            for _, ingredient in ipairs(item.ingredients) do
-                ingredientsText = ingredientsText .. ingredient.amount .. "x " .. ingredient.label .. "<br>"
-            end
-
-            ingredientsText = ingredientsText:sub(1, -5)
-
+    if Config.menu == "qb-menu" then
+        if Config.craftMenu[craftType] then
+            local category = Config.craftMenu[craftType]
             table.insert(menu, {
-                header = item.name,
-                txt = item.description .. "<br><br>" .. ingredientsText,
-                params = {
-                    event = "lynx_crafts:client:craftItem",
-                    args = {
-                        itemName = itemName,
-                        craftType = craftType
-                    }
-                }
+                header = category.label,
+                isMenuHeader = true
             })
+
+            for itemName, item in pairs(category.items) do
+
+                local ingredientsText = "Ingredients: <br>"
+                for _, ingredient in pairs(item.ingredients) do
+                    ingredientsText = ingredientsText .. ingredient.amount .. "x " .. ingredient.label .. "<br>"
+                end
+
+                ingredientsText = ingredientsText:sub(1, -5)
+
+                table.insert(menu, {
+                    header = item.name,
+                    txt = item.description .. "<br><br>" .. ingredientsText,
+                    params = {
+                        event = "lynx_crafts:client:craftItem",
+                        args = {
+                            itemName = itemName,
+                            craftType = craftType
+                        }
+                    }
+                })
+            end
+        else
+            print('No menu found for craft type: ' .. craftType)
         end
-    else
-        print('No menu found for craft type: ' .. craftType)
+    elseif Config.menu == "ox" then
+        if Config.craftMenu[craftType] then
+            local category = Config.craftMenu[craftType]
+
+            for itemName, item in pairs(category.items) do
+
+                local ingredientsText = "Ingredients: \n"
+                for _, ingredient in pairs(item.ingredients) do
+                    ingredientsText = ingredientsText .. ingredient.amount .. "x " .. ingredient.label .. "\n"
+                end
+
+                table.insert(menu, {
+                    id = itemName,
+                    title = item.name,
+                    icon = "fas fa-hammer",
+                    description = item.description .. "\n\n" .. ingredientsText,
+                    onSelect = function()
+                        TriggerEvent("lynx_crafts:client:craftItem", {itemName = itemName, craftType = craftType})
+                    end
+                })
+            end
+            local aids = Config.craftMenu[craftType]
+            lib.registerContext({
+                id = "crafting",
+                title = aids.label .. " Crafting",
+                options = menu
+            })
+        else
+            print('No menu found for craft type: ' .. craftType)
+        end
     end
 
     return menu
@@ -96,7 +127,11 @@ AddEventHandler("lynx_crafts:client:createMenu", function(data)
     print('Opening craft menu for type: ' .. craftType)
     local menu = GenerateCraftMenu(craftType)
     if #menu > 0 then
-        exports['qb-menu']:openMenu(menu)
+        if Config.menu == "qb-menu" then
+            exports['qb-menu']:openMenu(menu)
+        elseif Config.menu == "ox" then
+            lib.showContext("crafting")
+        end
     else
         print("No items found for this crafting station type")
     end
